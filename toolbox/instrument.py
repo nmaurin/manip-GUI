@@ -51,8 +51,8 @@ class Instrument():
             self.inst_obj = Virtual()
         if self.name == 'Zurich-MFLI_dev4199':
             self.inst_obj = ZurichMFLIdev4199()
-        if self.name == 'Thorlabs_LDC4005':
-            self.inst_obj = ThorlabsLDC4005()
+        if self.name == 'Thorlabs_ITC4002QCL':
+            self.inst_obj = ThorlabsITC4002QCL()
 
     def set_value(self,what,value):
         '''
@@ -68,7 +68,7 @@ class Instrument():
         pass
 
 
-class ThorlabsLDC4005():
+class ThorlabsITC4002QCL():
     # laser Driver with USB connection
     def __init__(self):
         self.daq = self.connect() 
@@ -77,8 +77,8 @@ class ThorlabsLDC4005():
         #identification de l'instrument
         rm = pyvisa.ResourceManager()
         rm.list_resources()
-        inst = rm.open_resource('USB0::0x1313::0x8049::M00440716::INSTR')
-        print('Device Thorlabs-LDC4005 IDN is %s'%(self.IDN()))
+        inst = rm.open_resource('USB0::0x1313::0x804A::M00560075::INSTR')
+        print('Device Thorlabs-ITC4002QCL IDN is %s'%(self.IDN()))
         return inst
 
     def IDN(self):
@@ -96,6 +96,13 @@ class ThorlabsLDC4005():
         if 'current' in what:
             inst.write("SOUR:CURR "+str(value))
             inst.write("SOUR:CURR "+str(value))
+            
+    def poll(self):
+        inst = self.daq
+        #inst.write("SOUR:CURR?")
+        time.sleep(0.1)
+        a = float(inst.query("SOUR:CURR?"))*1000
+        return int(a)
 
 class Virtual():
 
@@ -218,4 +225,17 @@ class ZurichMFLIdev4199():
 # x = Instrument('Virtual')
 # print(x.name)    
 # print(x.inst_obj)   
+if __name__ == "__main__":
+    ma_thorlabs = ThorlabsITC4002QCL()
+    ma_thorlabs.set_value('on', True)
+    start = 1
+    end = 30
+    step = 1
+    for i in range (start, end, step): 
+        ma_thorlabs.set_value('current', i)
+        print("Current : {} mA".format(ma_thorlabs.poll()))
 
+    for j in range (end, start, step):
+        ma_thorlabs.set_value('current', j)
+        print("Current : {} mA".format(ma_thorlabs.poll())) 
+    pass
