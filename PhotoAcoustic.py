@@ -279,7 +279,7 @@ class MesInstrus():
         self.use = {
             'Virtual':toolbox.instrument.Instrument(name='Virtual'),
             'Zurich-MFLI_dev4199':None,
-            'Thorlabs-ITC4002QCL':toolbox.instrument.Instrument(name='Thorlabs-ITC4002QCL')}
+            'Thorlabs_ITC4002QCL':toolbox.instrument.Instrument(name='Thorlabs_ITC4002QCL')}
 
     def set_value(self,inst,what,value):
         self.use[inst].set_value(what,value)
