@@ -3,6 +3,7 @@
 import numpy as np
 import zhinst.ziPython
 import pyvisa
+import time
 
 
 def close_all_inst():
@@ -52,7 +53,7 @@ class Instrument():
         if self.name == 'Zurich-MFLI_dev4199':
             self.inst_obj = ZurichMFLIdev4199()
         if self.name == 'Thorlabs_ITC4002QCL':
-            self.inst_obj = ThorlabsITC4002QCL()
+            self.inst_obj = Thorlabs_ITC4002QCL()
 
     def set_value(self,what,value):
         '''
@@ -78,7 +79,8 @@ class ThorlabsITC4002QCL():
         rm = pyvisa.ResourceManager()
         rm.list_resources()
         inst = rm.open_resource('USB0::0x1313::0x804A::M00560075::INSTR')
-        print('Device Thorlabs-ITC4002QCL IDN is %s'%(self.IDN()))
+        #print('Device Thorlabs-ITC4002QCL IDN is %s'%(self.IDN()))
+        self.inst = inst
         return inst
 
     def IDN(self):
@@ -97,12 +99,12 @@ class ThorlabsITC4002QCL():
             inst.write("SOUR:CURR "+str(value))
             inst.write("SOUR:CURR "+str(value))
             
-    def poll(self):
+    def poll(self,poll_length=0.01):
         inst = self.daq
         #inst.write("SOUR:CURR?")
         time.sleep(0.1)
         a = float(inst.query("SOUR:CURR?"))*1000
-        return int(a)
+        return [int(a),0,0,0]
 
 class Virtual():
 
@@ -226,16 +228,37 @@ class ZurichMFLIdev4199():
 # print(x.name)    
 # print(x.inst_obj)   
 if __name__ == "__main__":
+    #Import for the plot
+    import matplotlib.pyplot as plt
+
+    #Call of the classes
     ma_thorlabs = ThorlabsITC4002QCL()
+    ma_zurich = ZurichMFLIdev4199()
+
+    #Init of the MFLI and LD
+    ma_zurich.set_value('frequency',10000)
     ma_thorlabs.set_value('on', True)
     start = 1
-    end = 30
+    end = 80
     step = 1
+
+    #Init of the list containing the datas
+    Current = []
+    MAG = []
+
+    # Sweep of the current and recording of the MAG read by the MFLI
     for i in range (start, end, step): 
         ma_thorlabs.set_value('current', i)
-        print("Current : {} mA".format(ma_thorlabs.poll()))
+        #print("Current : {} mA".format(ma_thorlabs.poll(poll_length=0.01)))
+        #print("MAG = {}".format(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2]))
+        time.sleep(0.2)
+        Current.append(ma_thorlabs.poll(poll_length=0.01)[0])
+        MAG.append(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2])
 
-    for j in range (end, start, step):
-        ma_thorlabs.set_value('current', j)
-        print("Current : {} mA".format(ma_thorlabs.poll())) 
+    ## Plot
+    plt.plot(Current,MAG, '.')
+    plt.xlabel('Current (mA)')
+    plt.ylabel('MAG (u.a.)')
+    plt.show()
+
     pass
