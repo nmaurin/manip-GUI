@@ -106,6 +106,17 @@ def save_PA(param,courbes):
         info.write(k+'\n')
         info.write(param.dico[k].child_list())
     info.close()
+    
+## Conversion of the current value in wavelenght (nm) for laser Eblana 2
+def convert_wavelenght(current, temperature):
+    if temperature == 15:
+        return 1651.765+0.0145*current
+    elif temperature == 20:
+        return 1652.035+0.0155*current
+    elif temperature == 25:
+        return 1652.4075+0.01575*current
+    else:
+        return 1652.035+0.0155*current
 
 # def save_figure(dico):
 #     # save figure
