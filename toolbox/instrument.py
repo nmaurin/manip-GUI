@@ -182,9 +182,9 @@ class Thorlabs_ITC4002QCL():
         inst = self.daq
         if 'on' in what:
             if value == True:
-                inst.write("LAS:OUTPUT ON")
+                inst.write("OUTP ON")
             if value == False:
-                inst.write("LAS:OUTPUT OFF")
+                inst.write("OUTP OFF")
         if 'current' in what:
             value = value/1000
             inst.write("SOUR:CURR "+str(value))
