@@ -159,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             ## CHANGE VALUES ASKED ON THE INSTRUMENT
             if who in ['Input','Generator','Laser Driver']:
-                if what in ['time constant','sensitivity','amplitude','on','frequency']:
+                if what in ['time constant','sensitivity','on','amplitude','frequency','current','temperature']:
                     # get the nam of instrument asked in the parameter tree 
                     instru = self.parameters.give_inst(who)
                     self.instruments.set_value(instru,what,data)
@@ -337,6 +337,9 @@ class MesParams():
                 A.append([k,self.dico[who].param(k).value()])
         if who in 'Generator':
             for k in ['amplitude','on']: 
+                A.append([k,self.dico[who].param(k).value()])
+        if who in 'Diver Laser':
+            for k in ['on','current','temperature']:
                 A.append([k,self.dico[who].param(k).value()])
         return A
 
