@@ -128,6 +128,7 @@ class LaserDriver(pTypes.GroupParameter,MonParametre):
         self.addChild({'name': 'current max', 'type': 'float','value': 5, 'step': 1, 'limits': (1e-1, 120),'siPrefix': True, 'suffix': 'mA','decimals':6})
         self.addChild({'name': 'nbr pts', 'type': 'int','value': 100, 'step': 100, 'limits': (10, 100e3),'siPrefix': False, 'tip':'number of points use for the frequecy sweep'})
         self.addChild({'name': 'nbr seqs', 'type': 'list','values':[1,2,3,4,5,6,7,8,9,10],'value': 1, 'tip':'number of sequences, number of time frequecy sweep is running'})
+        self.addChild({'name': 'temperature', 'type': 'float','value': 15, 'step': 1, 'limits': (15, 25),'siPrefix': True, 'suffix': '°C','decimals':3})
         self.addChild({'name': 'waiting time', 'type': 'list','values':[1,2,3,4,5,6,7,8,9,10],'value': 3, 'tip':'Time time between two measurements. It is equal to time cosntant multiply by this factor'})
         self.addChild({'name': 'start', 'type': 'action'})
         self.addChild({'name': 'average', 'type': 'action'})
