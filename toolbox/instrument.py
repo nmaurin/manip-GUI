@@ -189,6 +189,8 @@ class Thorlabs_ITC4002QCL():
             value = value/1000
             inst.write("SOUR:CURR "+str(value))
             inst.write("SOUR:CURR "+str(value))
+        if 'temperature' in what:
+            inst.write("SOUR2:TEMP "+str(value)+"C")
             
     def poll(self,poll_length=0.01):
         inst = self.daq
@@ -196,8 +198,9 @@ class Thorlabs_ITC4002QCL():
         #inst.write("SOUR:CURR?")
         time.sleep(0.1)
         a = float(inst.query("SOUR:CURR?"))*100
-        #b = ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2]
-        return [int(a),0,0,0]
+        t = float(inst.query("SOUR2:TEMP?"))
+        #Return the current in mA and the temperature in degC
+        return [int(a),int(t),0,0]
 
 class Virtual():
 
@@ -246,8 +249,10 @@ if __name__ == "__main__":
     ma_zurich.set_value('amplitude',0.04) #130mVpk
     ma_zurich.set_value('time constant',time_constant) #s
 
-    #Init thorlabs : pas de 0,1mA
+    #Init thorlabs : pas de 1mA
     ma_thorlabs.set_value('on', True)
+    time.sleep(5)
+    ma_thorlabs.set_value('temperature',17)
     start = 50 #50mA
     end = 90 #90mA
     step = 1
