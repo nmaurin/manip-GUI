@@ -69,75 +69,6 @@ class Instrument():
         pass
 
 
-class ThorlabsITC4002QCL():
-    # laser Driver with USB connection
-    def __init__(self):
-        self.daq = self.connect() 
-
-    def connect(self):
-        #identification de l'instrument
-        rm = pyvisa.ResourceManager()
-        rm.list_resources()
-        inst = rm.open_resource('USB0::0x1313::0x804A::M00560075::INSTR')
-        #print('Device Thorlabs-ITC4002QCL IDN is %s'%(self.IDN()))
-        self.inst = inst
-        return inst
-
-    def IDN(self):
-        time.sleep(0.1)
-        self.daq.write("*CLS")
-        return self.daq.query("*IDN?")
-
-    def set_value(self,what,value):
-        inst = self.daq
-        if 'on' in what:
-            if value == True:
-                inst.write("LAS:OUTPUT ON")
-            if value == False:
-                inst.write("LAS:OUTPUT OFF")
-        if 'current' in what:
-            inst.write("SOUR:CURR "+str(value))
-            inst.write("SOUR:CURR "+str(value))
-            
-    def poll(self,poll_length=0.01):
-        inst = self.daq
-        #inst.write("SOUR:CURR?")
-        time.sleep(0.1)
-        a = float(inst.query("SOUR:CURR?"))*1000
-        return [int(a),0,0,0]
-
-class Virtual():
-
-    def __init__(self):
-        self.daq = self.connect()
-        self.freq = None
-        self.current = None
-
-    def connect(self):
-        daq = None
-        return daq
-
-    def set_value(self,what,value):
-        '''
-        Give the value 'value' to the parameter 'what' on the instrument
-        '''
-        # print('Virtual instrument : %s has been changed to %s' %(what,str(value)))
-        if what in 'frequency':
-            self.freq = value
-        if what in 'current':
-            self.freq = value
-
-    def poll(self,poll_length=0.01):
-        # poll_length = recording time
-        R = np.random.normal(0,1,1)
-        Phi = np.random.normal(-90,90,1)
-        # R, Phi = noisy_lorentzian_function(self.freq,1,32e3,1000)
-        X = R*np.cos(Phi)
-        Y = R*np.sin(Phi)
-        Phi = Phi*180/np.pi # convert phi in degre
-        return [X,Y,R,Phi]
-
-
 class ZurichMFLIdev4199():
     def __init__(self):
         self.daq = None
@@ -227,38 +158,131 @@ class ZurichMFLIdev4199():
 # x = Instrument('Virtual')
 # print(x.name)    
 # print(x.inst_obj)   
+
+class Thorlabs_ITC4002QCL():
+    # laser Driver with USB connection
+    def __init__(self):
+        self.daq = self.connect() 
+
+    def connect(self):
+        #identification de l'instrument
+        rm = pyvisa.ResourceManager()
+        rm.list_resources()
+        inst = rm.open_resource('USB0::0x1313::0x804A::M00560075::INSTR')
+        #print('Device Thorlabs-ITC4002QCL IDN is %s'%(self.IDN()))
+        self.inst = inst
+        return inst
+
+    def IDN(self):
+        time.sleep(0.1)
+        self.daq.write("*CLS")
+        return self.daq.query("*IDN?")
+
+    def set_value(self,what,value):
+        inst = self.daq
+        if 'on' in what:
+            if value == True:
+                inst.write("LAS:OUTPUT ON")
+            if value == False:
+                inst.write("LAS:OUTPUT OFF")
+        if 'current' in what:
+            value = value/1000
+            inst.write("SOUR:CURR "+str(value))
+            inst.write("SOUR:CURR "+str(value))
+            
+    def poll(self,poll_length=0.01):
+        inst = self.daq
+        #ma_zurich = ZurichMFLIdev4199()
+        #inst.write("SOUR:CURR?")
+        time.sleep(0.1)
+        a = float(inst.query("SOUR:CURR?"))*100
+        #b = ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2]
+        return [int(a),0,0,0]
+
+class Virtual():
+
+    def __init__(self):
+        self.daq = self.connect()
+        self.freq = None
+        self.current = None
+
+    def connect(self):
+        daq = None
+        return daq
+
+    def set_value(self,what,value):
+        '''
+        Give the value 'value' to the parameter 'what' on the instrument
+        '''
+        # print('Virtual instrument : %s has been changed to %s' %(what,str(value)))
+        if what in 'frequency':
+            self.freq = value
+        if what in 'current':
+            self.freq = value
+
+    def poll(self,poll_length=0.01):
+        # poll_length = recording time
+        R = np.random.normal(0,1,1)
+        Phi = np.random.normal(-90,90,1)
+        # R, Phi = noisy_lorentzian_function(self.freq,1,32e3,1000)
+        X = R*np.cos(Phi)
+        Y = R*np.sin(Phi)
+        Phi = Phi*180/np.pi # convert phi in degre
+        return [X,Y,R,Phi]
+
+
 if __name__ == "__main__":
     #Import for the plot
     import matplotlib.pyplot as plt
+    import csv
 
     #Call of the classes
-    ma_thorlabs = ThorlabsITC4002QCL()
+    ma_thorlabs = Thorlabs_ITC4002QCL()
     ma_zurich = ZurichMFLIdev4199()
 
     #Init of the MFLI and LD
-    ma_zurich.set_value('frequency',10000)
+    time_constant = 0.100 #s
+    ma_zurich.set_value('frequency',55150) #55,15kHz
+    ma_zurich.set_value('amplitude',0.04) #130mVpk
+    ma_zurich.set_value('time constant',time_constant) #s
+
+    #Init thorlabs : pas de 0,1mA
     ma_thorlabs.set_value('on', True)
-    start = 1
-    end = 80
+    start = 50 #50mA
+    end = 90 #90mA
     step = 1
 
     #Init of the list containing the datas
     Current = []
     MAG = []
+    X = []
+    Y= []
+    Phase=[]
+
+    #Init save file
+    file_name = "20200602-XRE_FU2 Capacitive 2mmsV-LD 66,4mA mod 100mVpk-CH4 100%-TC 1s-1F signal (Current - MAG (V) - Phase (deg) - X - Y)"
 
     # Sweep of the current and recording of the MAG read by the MFLI
     for i in range (start, end, step): 
         ma_thorlabs.set_value('current', i)
         #print("Current : {} mA".format(ma_thorlabs.poll(poll_length=0.01)))
         #print("MAG = {}".format(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2]))
-        time.sleep(0.2)
-        Current.append(ma_thorlabs.poll(poll_length=0.01)[0])
+        #time.sleep(time_constant*2)
+        Current.append(ma_thorlabs.poll(poll_length=0.01)[0]*1e-1)
         MAG.append(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[2])
+        X.append(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[0])
+        Y.append(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[1])
+        Phase.append(ma_zurich.poll(poll_length = 0.01,poll_timeout = 500)[3])
 
     ## Plot
-    plt.plot(Current,MAG, '.')
+    plt.plot(Current,MAG, '--')
     plt.xlabel('Current (mA)')
-    plt.ylabel('MAG (u.a.)')
+    plt.ylabel('MAG (V)')
     plt.show()
 
+    # Save data
+    zip(Current, MAG, Phase, X, Y)
+    with open("{}.txt".format(file_name), 'w') as f:
+        writer = csv.writer(f, delimiter = '\t')
+        writer.writerows(zip(Current, MAG, Phase, X, Y))
     pass
