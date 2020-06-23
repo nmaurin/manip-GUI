@@ -67,8 +67,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_dock(self):
         area = DockArea()
         self.obj_graph['param']['dock'] = Dock("setting parameters")
-        self.obj_graph['plot']['dock'] = Dock("graphic 1")
-        self.obj_graph['plot2']['dock'] = Dock("graphic 2")
+        self.obj_graph['plot']['dock'] = Dock("R (V) function of current (mA)")
+        self.obj_graph['plot2']['dock'] = Dock("Phi (deg) function of current (mA)")
         area.addDock(self.obj_graph['param']['dock'], 'left')
         area.addDock(self.obj_graph['plot']['dock'],'right')
         area.addDock(self.obj_graph['plot2']['dock'],'bottom',self.obj_graph['plot']['dock'])
@@ -159,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             ## CHANGE VALUES ASKED ON THE INSTRUMENT
             if who in ['Input','Generator','Laser Driver']:
-                if what in ['time constant','sensitivity','amplitude','on','frequency']:
+                if what in ['time constant','sensitivity','on','amplitude','frequency','current','temperature']:
                     # get the nam of instrument asked in the parameter tree 
                     instru = self.parameters.give_inst(who)
                     self.instruments.set_value(instru,what,data)
@@ -197,8 +197,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     curve_id='curve 0',
                     param_tree=self.parameters)  
                 # display graphs
-                graph_1.display('curve 0','R')
-                graph_2.display('curve 0','Phi')
+                graph_1.display('curve 0','X')
+                graph_2.display('curve 0','Y')
 
 
             ## ERASE ACQUISITION
@@ -215,6 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 toolbox.function.save_PA(
                     self.parameters,
                     self.obj_graph['plot']['curve'])
+                
         
 
     def stop_timer(self):
@@ -241,11 +242,12 @@ class MainWindow(QtWidgets.QMainWindow):
         index = len(graph_1.curves['curve 0']['data']['R'])
         current_i = graph_1.curves['curve 0']['data']['Current'][index]
         instru = self.parameters.give_inst('Laser Driver')
+        instru2 = self.parameters.give_inst('Input') ####added 06/05
         self.instruments.set_value(instru,'current',current_i)
         # wait
         time.sleep(self.parameters.waiting_time())
         # get X Y R and Phi from instrument
-        temp = self.instruments.get_X_Y_R_Phi(instru)
+        temp = self.instruments.get_X_Y_R_Phi(instru2) ####added 06/05
         # update data
         graph_1.update_X_Y_R_Phi('curve 0',temp)
         graph_2.update_X_Y_R_Phi('curve 0',temp)
@@ -278,7 +280,8 @@ class MesInstrus():
         # dico with instru which can be called
         self.use = {
             'Virtual':toolbox.instrument.Instrument(name='Virtual'),
-            'Zurich-MFLI_dev4199':None}
+            'Zurich-MFLI_dev4199':toolbox.instrument.Instrument(name='ZurichMFLIdev4199'),
+            'Thorlabs_ITC4002QCL':toolbox.instrument.Instrument(name='Thorlabs_ITC4002QCL')}
 
     def set_value(self,inst,what,value):
         self.use[inst].set_value(what,value)
@@ -334,6 +337,9 @@ class MesParams():
                 A.append([k,self.dico[who].param(k).value()])
         if who in 'Generator':
             for k in ['amplitude','on']: 
+                A.append([k,self.dico[who].param(k).value()])
+        if who in 'Diver Laser':
+            for k in ['on','current','temperature']:
                 A.append([k,self.dico[who].param(k).value()])
         return A
 
