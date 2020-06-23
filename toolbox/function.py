@@ -60,12 +60,12 @@ def save_FS(param,courbes):
         os.makedirs(path)
 
     # save csv file with all the data
-    data = pandas.DataFrame({'frequency (Hz)': courbes.curves['curve 0']['data']['Freq'],
+    data = pandas.DataFrame({'Frequency (Hz)': courbes.curves['curve 0']['data']['freq'],
                 'x (Vrms)': courbes.curves['curve 0']['data']['X'],
                 'y (Vrms)': courbes.curves['curve 0']['data']['Y'],
                 'r (Vrms)': courbes.curves['curve 0']['data']['R'],
                 'phase (deg)': courbes.curves['curve 0']['data']['Phi']})
-    data.to_csv(file_name +'.csv', sep=';', encoding='utf-8') 
+    data.to_csv(file_name +'.csv', sep=' ', encoding='utf-8') 
 
     # save a txt file with all the parameter
     info = open(file_name+'.txt','w')
@@ -91,7 +91,7 @@ def save_PA(param,courbes):
         os.makedirs(path)
 
     # save csv file with all the data
-    data = pandas.DataFrame({'curent (A)': courbes.curves['curve 0']['data']['Current'],
+    data = pandas.DataFrame({'current (mA)': courbes.curves['curve 0']['data']['Current'],
                 'x (Vrms)': courbes.curves['curve 0']['data']['X'],
                 'y (Vrms)': courbes.curves['curve 0']['data']['Y'],
                 'r (Vrms)': courbes.curves['curve 0']['data']['R'],
@@ -106,6 +106,17 @@ def save_PA(param,courbes):
         info.write(k+'\n')
         info.write(param.dico[k].child_list())
     info.close()
+    
+## Conversion of the current value in wavelenght (nm) for laser Eblana 2
+def convert_wavelenght(current, temperature):
+    if temperature == 15:
+        return 1651.765+0.0145*current
+    elif temperature == 20:
+        return 1652.035+0.0155*current
+    elif temperature == 25:
+        return 1652.4075+0.01575*current
+    else:
+        return 1652.035+0.0155*current
 
 # def save_figure(dico):
 #     # save figure
@@ -166,7 +177,6 @@ def average(ARRAY,ns):
     MEAN = np.mean(LIST_OF_ARRAY,axis=0)
     #print(MEAN)
     return MEAN
-
 
 
 # def sequence_average(dico):
